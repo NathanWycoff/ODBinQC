@@ -23,18 +23,6 @@ bb.var <- function(alpha, beta, n) {
 #' @return A tuple of the form c(lower_lim, upper_lim), both between 0 and 1.
 get_lims <- function(chart, n = NULL) UseMethod("get_lims")
 
-#' Get X Chart Limits
-#' 
-#' Get the limits at which an X chart will signal.
-#' @param chart The control chart the signalling limits of which are desired.
-#' @param n The sample size. Not used for this chart.
-#' @return A tuple of the form c(lower_lim, upper_lim), both between 0 and 1.
-get_lims.x_chart <- function(chart, n = NULL) {
-    l_lim <- pmax(0, chart$mu - chart$k * chart$sig)
-    u_lim <- pmin(1, chart$mu + chart$k * chart$sig)
-    return(c(l_lim, u_lim))
-}
-
 #' Get Beta RE Chart Limits
 #' 
 #' Get the limits at which a Beta random effects chart will signal.

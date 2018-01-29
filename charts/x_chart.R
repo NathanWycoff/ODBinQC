@@ -46,6 +46,18 @@ x_chart <- function(X = NULL, N = NULL, mu, sig, k = 3) {
     return(ret)
 }
 
+#' Get X Chart Limits
+#' 
+#' Get the limits at which an X chart will signal.
+#' @param chart The control chart the signalling limits of which are desired.
+#' @param n The sample size. Not used for this chart.
+#' @return A tuple of the form c(lower_lim, upper_lim), both between 0 and 1.
+get_lims.x_chart <- function(chart, n = NULL) {
+    l_lim <- pmax(0, chart$mu - chart$k * chart$sig)
+    u_lim <- pmin(1, chart$mu + chart$k * chart$sig)
+    return(c(l_lim, u_lim))
+}
+
 #' Calibrate X Chart In Control ARL
 #'
 #' Tune an X chart such that it has approximately the desired in sample Average Run Length (ARL) (if the true parameters are known. If they are esimated, this will be even more approximate), under the assumption that data are being drawn form a Beta-Binomial model. 

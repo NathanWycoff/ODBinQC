@@ -7,6 +7,7 @@ source('lib.R')
 source('./charts/re_beta_chart.R')
 source('./charts/x_chart.R')
 source('./charts/laney_chart.R')
+source('./charts/p_chart.R')
 require(progress)
 
 ### Generate data from a beta-binomial model
@@ -18,6 +19,7 @@ iters <- 1e3#How many times do we run the experiment?
 
 ##Prepare the charts
 charts <- list()
+
 #Beta Random Effects
 charts$beta.re <- re_beta_chart(alpha = alpha, beta = beta)
 
@@ -31,6 +33,9 @@ charts$x <- x_chart(mu = mu,
 #Laney chart
 params <- bb_mm('laney', alpha, beta, n.mu)
 charts$laney <- laney_chart(params$rho, params$sig_p, params$sig_z)
+
+# P chart
+charts$p <- p_chart(alpha / (alpha + beta))
 
 # Calibrate the charts to have the desired in control ARL
 target_arl <- 100
