@@ -2,22 +2,17 @@
 #  test_betabin_funcs.R Author "Nathan Wycoff <nathanbrwycoff@gmail.com>" Date 01.23.2018
 
 ## This script puts some beta-binomial functions to the test
-source('re_beta_chart.R')
+source('./charts/re_beta_chart.R')
 
 alpha <- 10
 beta <- 2
 n <- 1000
 ns <- 100
 
-
 ## Compare the two methods against one another, using the hypergeometric func
 ## vs just summing the pmf
 ks <- round(seq(0,n, length.out = ns))
-system.time(hs <- sapply(ks, function(k) bb.cdf.hypergeom(k,n,alpha,beta)))
-system.time(ps <- sapply(ks, function(k) bb.cdf.pmf(k,n,alpha,beta)))
 system.time(as <- sapply(ks, function(k) bb.cdf(k,n,alpha,beta)))
-plot(hs, ps)
-
 
 ## Compare the quantile func to observed data
 p <- 0.9

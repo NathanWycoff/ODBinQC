@@ -1,0 +1,2 @@
+Interestingly, the laney chart's use of moving ranges is a terrible estimator of the standard deviation if the distribution is asymmetric.
+
