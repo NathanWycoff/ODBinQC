@@ -11,38 +11,13 @@
 #' @param sig The true overall standard deviation. Estimated using moving ranges if not specified.
 #' @param k A positive scalar indicating how many standard deviation away from the mean the symmetric signalling limits should be. 
 #' @return An object of class control.chart representing the chart.
-x_chart <- function(X = NULL, N = NULL, mu, sig, k = 3) {
-    ## Estimate parameters if not provided
-    m <- length(X)
-    if (missing(mu)) {
-        if (!is.null(X) && !is.null(N)) {
-            mu <- mean(X / N)
-        } else {
-            stop("Either provide data (specify X) or provide true parameters (mu, sig)")
-        }
-    }
-    if (missing(sig)) {
-        if (!is.null(X) && !is.null(N)) {
-            if (length(X) == 1) {
-                stop("Cannot estimate standard deviation with only 1 observation")
-            }
-            #Calculate sd using range
-            ranges <- abs(diff(rho_obs))
-            r_bar <- mean(ranges)
-            sigma_p <- r_bar / 1.128
-        } else {
-            stop("Either provide data (specify X) or provide true parameters (mu, sig)")
-        }
-    }
-
+x_chart <- function(mu, sig, k = 3) {
     ## Create the return object.
     ret <- list()
     ret$mu <- mu
     ret$sig <- sig
-    ret$X <- X
-    ret$N <- N
     ret$k <- k
-    class(ret) <- 'x_chart'
+    class(ret) <- c('x_chart', 'control_chart')
     return(ret)
 }
 
@@ -56,6 +31,35 @@ get_lims.x_chart <- function(chart, n = NULL) {
     l_lim <- pmax(0, chart$mu - chart$k * chart$sig)
     u_lim <- pmin(1, chart$mu + chart$k * chart$sig)
     return(c(l_lim, u_lim))
+}
+
+#' Estimate X Chart Parameters.
+#'
+#' Estimate the probability of success for a P chart
+#' @param chart The chart object which estimation is to be performed for.
+#' @param X A integer vector of observed counts.
+#' @param N Either an integer vector of the same length as X, indicating sample sizes, or a scalar integer for constant sample size.
+#' @return The chart with parameter modified. 
+est_params.x_chart <- function(chart, X, N) {
+    if ((length(X) != length(N)) && length(N) != 1) {
+        stop("'N' should either be a scalar, indicating constant sample size, or a vector of the same length of 'X'")
+    }
+
+    mu <- mean(X / N)
+
+    if (length(X) == 1) {
+        stop("Cannot estimate standard deviation with only 1 observation")
+    }
+    #Calculate sd using range
+    ranges <- abs(diff(X / N))
+    r_bar <- mean(ranges)
+    sig <- r_bar / 1.128
+
+    #Store the vals
+    chart$mu <- mu
+    chart$sig <- sig
+
+    return(chart)
 }
 
 #' Calibrate X Chart In Control ARL

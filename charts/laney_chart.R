@@ -19,7 +19,7 @@ laney_chart <- function(rho = NA, sig_p = NA, sig_z = NA, k = 3) {
     ret$sig_p <- sig_p
     ret$sig_z <- sig_z
     ret$k <- k
-    class(ret) <- 'laney_chart'
+    class(ret) <- c('laney_chart', 'control_chart')
     return(ret)
 }
 
@@ -44,7 +44,7 @@ get_lims.laney_chart <- function(chart, n) {
 #' @param N Either an integer vector of the same length as X, indicating sample sizes, or a scalar integer for constant sample size.
 #' @return The chart with parameters modified. 
 est_params.laney_chart <- function(chart, X, N) {
-    if ((length(X) != length(N)) || length(N) == 1) {
+    if ((length(X) != length(N)) && length(N) != 1) {
         stop("'N' should either be a scalar, indicating constant sample size, or a vector of the same length of 'X'")
     }
     rho <- mean(X / N)

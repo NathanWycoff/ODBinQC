@@ -61,6 +61,33 @@ re_beta_chart <- function(X = NULL, N = NULL, alpha, beta, l_p = 0.025, u_p = 0.
     ret$N <- N
     ret$l_p = l_p
     ret$u_p = u_p
-    class(ret) <- 're_beta_chart'
+    class(ret) <- c('re_beta_chart', 'control_chart')
     return(ret)
+}
+
+#' Get Beta RE Chart Limits
+#' 
+#' Get the limits at which a Beta random effects chart will signal.
+#' @param chart The control chart the signalling limits of which are desired.
+#' @param n The sample size. Required for this chart.
+#' @return A tuple of the form c(lower_lim, upper_lim), both between 0 and 1.
+get_lims.re_beta_chart <- function(chart, n) {
+    l_lim <- bb.quantile(chart$l_p, n, chart$alpha, chart$beta) / n
+    u_lim <- bb.quantile(chart$u_p, n, chart$alpha, chart$beta) / n
+    return(c(l_lim, u_lim))
+}
+
+#' Calibrate Beta RE Chart In Control ARL
+#'
+#' Tune a control chart such that it has approximately the desired in sample Average Run Length (ARL) (if the true parameters are known. If they are esimated, this will be even more approximate).
+#' @param chart The control chart to tune.
+#' @param target_arl A positive scalar, the desired in control ARL.
+#' @param ... Additional arguments ignored, but available for compatibility with siblings of this function.
+#' @return The chart object passed to this function suitably modified to achieve target ARL.
+cal_arl.re_beta_chart <- function(chart, target_arl, ...) {
+    #Just ignores extra args
+    target_p <- 1 / target_arl
+    chart$l_p <- 0 + target_p / 2
+    chart$u_p <- 1 - target_p / 2
+    return(chart)
 }

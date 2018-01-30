@@ -23,18 +23,6 @@ bb.var <- function(alpha, beta, n) {
 #' @return A tuple of the form c(lower_lim, upper_lim), both between 0 and 1.
 get_lims <- function(chart, n = NULL) UseMethod("get_lims")
 
-#' Get Beta RE Chart Limits
-#' 
-#' Get the limits at which a Beta random effects chart will signal.
-#' @param chart The control chart the signalling limits of which are desired.
-#' @param n The sample size. Required for this chart.
-#' @return A tuple of the form c(lower_lim, upper_lim), both between 0 and 1.
-get_lims.re_beta_chart <- function(chart, n) {
-    l_lim <- bb.quantile(chart$l_p, n, chart$alpha, chart$beta) / n
-    u_lim <- bb.quantile(chart$u_p, n, chart$alpha, chart$beta) / n
-    return(c(l_lim, u_lim))
-}
-
 #' Calibrate In Control ARL
 #'
 #' Tune a control chart such that it has approximately the desired in sample Average Run Length (ARL) (if the true parameters are known. If they are esimated, this will be even more approximate).
@@ -42,21 +30,6 @@ get_lims.re_beta_chart <- function(chart, n) {
 #' @param target_arl A positive scalar, the desired in control ARL.
 #' @return The chart object passed to this function suitably modified to achieve target ARL.
 cal_arl <- function(chart, target_arl, n, alpha, beta) UseMethod('cal_arl')
-
-#' Calibrate In Control ARL
-#'
-#' Tune a control chart such that it has approximately the desired in sample Average Run Length (ARL) (if the true parameters are known. If they are esimated, this will be even more approximate).
-#' @param chart The control chart to tune.
-#' @param target_arl A positive scalar, the desired in control ARL.
-#' @param ... Additional arguments ignored, but available for compatibility with siblings of this function.
-#' @return The chart object passed to this function suitably modified to achieve target ARL.
-cal_arl.re_beta_chart <- function(chart, target_arl, ...) {
-    #Just ignores extra args
-    target_p <- 1 / target_arl
-    chart$l_p <- 0 + target_p / 2
-    chart$u_p <- 1 - target_p / 2
-    return(chart)
-}
 
 #' Estimate Control-Chart Parameters.
 #'
@@ -88,4 +61,35 @@ bb_mm <- function(target, alpha = NULL, beta = NULL, N = NULL, mu = NULL, sig = 
     } else {
         stop("Target not implemented.")
     }
+}
+
+#' Plot a Control Chart Given Data
+#'
+#' Plot a control chart and its limits given data
+plot.control_chart <- function(chart, X, N, force_01 = FALSE) {
+    m <- length(X)
+    if ((length(X) != length(N)) && length(N) != 1) {
+        stop("'N' should either be a scalar, indicating constant sample size, or a vector of the same length of 'X'")
+    }
+    
+    #Get the chart's limits for all the data
+    lims <- lapply(N, function(n) get_lims(chart, n))
+    l_lims <- sapply(lims, function(lim) lim[1])
+    u_lims <- sapply(lims, function(lim) lim[2])
+
+    #Get the boundaries of our chart's y-axis
+    if (force_01) {
+        ylim <- c(0,1)
+    } else {
+        l <- min(c(l_lims, X / N))
+        u <- max(c(u_lims, X / N))
+        ylim <- c(l, u)
+    }
+
+    #Make our chart!
+    plot(NA, NA, xlim = c(1, m), ylim = ylim, main = class(chart), 
+         xlab = "Run", ylab = "Observed Proportion")
+    points(1:m, X / N)
+    points(1:m, l_lims, type = 'l', col = 'red')
+    points(1:m, u_lims, type = 'l', col = 'red')
 }
