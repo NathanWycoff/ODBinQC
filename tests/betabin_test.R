@@ -3,6 +3,7 @@
 
 ## This script puts some beta-binomial functions to the test
 source('./charts/re_beta_chart.R')
+source('./lib.R')
 
 alpha <- 10
 beta <- 2
@@ -29,3 +30,12 @@ cat('observed')
 quantile(X, p)
 cat('actual')
 q
+
+## See if we can recover the appropriate beta binomial parameters to match a specifeid mean and variance.
+alpha <- 2000
+beta <- 100
+N <- 20
+mu <- bb.mean(alpha, beta, N)
+sig <- sqrt(bb.var(alpha, beta, N))
+
+bb_mm('betabinom', mu = mu, sig = sig, N = N)

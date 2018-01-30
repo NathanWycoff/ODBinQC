@@ -65,8 +65,9 @@ est_params <- function(chart, X, N) UseMethod('est_params')
 
 #' Moment Matching for Various Distributions
 #'
-#' Moment match various distributions to the beta-binomial.
-bb_mm <- function(target, alpha, beta, N) {
+#' Moment match various distributions to the beta-binomial, and back.
+bb_mm <- function(target, alpha = NULL, beta = NULL, N = NULL, mu = NULL, sig = NULL,
+                  inits = 1e2) {
     if (target == 'laney') {
         rho <- alpha / (alpha + beta)
         m <- bb.mean(alpha, beta, N)
@@ -75,8 +76,16 @@ bb_mm <- function(target, alpha, beta, N) {
         sig_pi <- sig_p / sqrt(N)
         sig_z <- sqrt(v) / (N * sig_pi)
         return(list(rho = rho, sig_p = sig_p, sig_z = sig_z))
+
+    } else if (target == 'betabinom') {
+
+        c1 <- (N - mu) / mu
+        alpha <- N * (mu* (N - mu) - sig^2) / ((1 + (N-mu) / mu) * 
+                                               (sig^2*N - mu * (N - mu)))
+        beta <- alpha * (N - mu) / mu
+
+        return(list(alpha = alpha, beta = beta))
     } else {
         stop("Target not implemented.")
     }
-
 }
