@@ -39,8 +39,8 @@ est_params <- function(chart, X, N) UseMethod('est_params')
 #' Moment Matching for Various Distributions
 #'
 #' Moment match various distributions to the beta-binomial, and back.
-bb_mm <- function(target, alpha = NULL, beta = NULL, N = NULL, mu = NULL, sig = NULL,
-                  inits = 1e2) {
+bb_mm <- function(target, alpha = NULL, beta = NULL, N = NULL, mu = NULL, 
+                  sig = NULL) {
     if (target == 'laney') {
         rho <- alpha / (alpha + beta)
         m <- bb.mean(alpha, beta, N)
@@ -52,10 +52,13 @@ bb_mm <- function(target, alpha = NULL, beta = NULL, N = NULL, mu = NULL, sig = 
 
     } else if (target == 'betabinom') {
 
-        c1 <- (N - mu) / mu
         alpha <- N * (mu* (N - mu) - sig^2) / ((1 + (N-mu) / mu) * 
                                                (sig^2*N - mu * (N - mu)))
         beta <- alpha * (N - mu) / mu
+
+        if (alpha <= 0 || beta <= 0) {
+            warning("alpha or beta is less than or equal to zero (desired mean/variance combination not possible at this sample size)")
+        }
 
         return(list(alpha = alpha, beta = beta))
     } else {
@@ -69,7 +72,7 @@ bb_mm <- function(target, alpha = NULL, beta = NULL, N = NULL, mu = NULL, sig = 
 plot.control_chart <- function(chart, X, N, force_01 = FALSE) {
     m <- length(X)
     if ((length(X) != length(N)) && length(N) != 1) {
-        stop("'N' should either be a scalar, indicating constant sample size, or a vector of the same length of 'X'")
+        stop("'N' should either be a scalar, indicating constant sample size, or a vector of the same length as 'X'")
     }
     
     #Get the chart's limits for all the data
@@ -77,19 +80,26 @@ plot.control_chart <- function(chart, X, N, force_01 = FALSE) {
     l_lims <- sapply(lims, function(lim) lim[1])
     u_lims <- sapply(lims, function(lim) lim[2])
 
+    #Get sample proportions
+    rho_hats <- X / N
+
     #Get the boundaries of our chart's y-axis
     if (force_01) {
         ylim <- c(0,1)
     } else {
-        l <- min(c(l_lims, X / N))
-        u <- max(c(u_lims, X / N))
+        l <- min(c(l_lims, rho_hats))
+        u <- max(c(u_lims, rho_hats))
         ylim <- c(l, u)
     }
+
+    #Figure out which ones are out of bounds:
+    is_oob <- (rho_hats < l_lims | rho_hats > u_lims)
+    cols <- c('black', 'red')
 
     #Make our chart!
     plot(NA, NA, xlim = c(1, m), ylim = ylim, main = class(chart), 
          xlab = "Run", ylab = "Observed Proportion")
-    points(1:m, X / N)
+    points(1:m, X / N, col = cols[is_oob + 1])
     points(1:m, l_lims, type = 'l', col = 'red')
     points(1:m, u_lims, type = 'l', col = 'red')
 }

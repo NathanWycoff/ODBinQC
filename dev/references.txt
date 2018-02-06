@@ -1,3 +1,33 @@
-http://onlinelibrary.wiley.com/doi/10.1002/qre.1215/full
 http://onlinelibrary.wiley.com/doi/10.1002/qre.1581/full
 http://www.sciencedirect.com/science/article/pii/S0195670111001447
+
+-- A beta control chart is great, but it's constant for different n, which is wrong.
+Beta control charts for monitoring fraction data
+
+-- Dang, someone has done a beta-binomial control chart (seems to be in portuguese)
+BAYESIAN CONTROL CHARTS FOR ATTRIBUTES AND THE LARGE SUBGROUP SIZE IN p CHART
+
+Seem to want to do fully bayesian inference using the chart, and do not estimate alpha, beta but elicit prior info by picking a target interval
+
+-- Oh somebody did it in Korean too:
+https://www.jksqm.org/journal/view.php?number=1974
+Development of a p Control Chart for Overdispersed Process with Beta-Binomial Model
+
+They recommend estimating using either ML or MoM, both of which would suffer from inflated variance estiamtes if there is a sustained mean shift.
+they have a cool reparameterization for the beta-binomial that is much more intuitive than the standard one.
+
+-- do RE on an example
+Handling over-dispersion of performance indicators
+http://qualitysafety.bmj.com/content/14/5/347
+
+-- a sim study on the same topic, doesn't include RE's tho
+Outlier Detection for Healthcare Quality Monitoring – A Comparison of Four Approaches to Over-Dispersed Proportions
+
+-- Read this eventually, it seems to be hard to get my hands on:
+Statistical process control charts for attribute data involving very large sample sizes: a review of problems and solutions
+
+-- These guys include the binomial dist as a special case, but it is no longer overdispersed at that point.
+A generalized statistical control chart for over- or under-dispersed data
+
+-- These guys evaluated the Laney chart against the p-chart, but don
+Evaluation of Laney p’ Chart Performance 

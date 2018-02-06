@@ -20,6 +20,9 @@ N <- rpois(m, n.mu)
 rhos <- rbeta(m, alpha, beta)
 X <- rbinom(m, N, rhos)
 
+## Write them to a csv
+write.csv(as.data.frame(cbind(X, N)), './data/minitab_test_data.csv')
+
 ## Create some charts
 charts <- list()
 
@@ -42,3 +45,9 @@ charts <- lapply(charts, function(chart) est_params(chart, X, N))
 
 ## Get their limits
 lapply(N, function(n) lapply(charts, function(chart) get_lims(chart, n)))
+
+## Plot them!
+par(mfrow=c(2,2))
+plot(charts$x, X, N)#IMR Chart looks good!
+plot(charts$laney, X, N)
+plot(charts$p, X, N)#P chart looks good!

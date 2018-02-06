@@ -1,7 +1,5 @@
 #!/usr/bin/Rscript
-#  test_cal_arl.R Author "Nathan Wycoff <nathanbrwycoff@gmail.com>" Date 01.24.2018
-
-## Test functions that calibrate in control ARL.
+#  examples/shift_in_mean.R Author "Nathan Wycoff <nathanbrwycoff@gmail.com>" Date 02.06.2018
 
 source('lib.R')
 source('./charts/re_beta_chart.R')
@@ -10,50 +8,72 @@ source('./charts/laney_chart.R')
 source('./charts/p_chart.R')
 require(progress)
 
-### Generate data from a beta-binomial model
-n.mu <- 1000#Mean number of observations per sample (Drawn form a poisson dist)
-alpha <- 10#Parameters for random effect distribution (a beta dist)
-beta <- 10
-max_periods <- 100#After how many periods do we stop the simulation if the method still hasn't signaled?
+## Randomly shift the mean and observe each method's performance.
+
+#K <- 100#How many time points are observed
+N.mu <- 1e3#How many points do we observe on average at each time point
+
+#Specify a certain mean and variance...
+rho_ic <- 0.1
+rho_oc <- 0.2
+sig <- N.mu*0.2
+
+# and get the appropriate alpha and beta
+res_ic <- bb_mm('betabinom', N = N.mu, mu = N.mu * rho_ic, sig = sig)
+alpha_ic <- res_ic$alpha
+beta_ic <- res_ic$beta
+res_oc <- bb_mm('betabinom', N = N.mu, mu = N.mu * rho_oc, sig = sig)
+alpha_oc <- res_oc$alpha
+beta_oc <- res_oc$beta
+
 iters <- 1e3#How many times do we run the experiment?
 
 ##Prepare the charts
 charts <- list()
 
 #Beta Random Effects
-charts$beta.re <- re_beta_chart(alpha = alpha, beta = beta)
+charts$beta.re <- re_beta_chart(alpha = alpha_ic, beta = beta_ic)
 
 # X chart
 #TODO: The sd evaluation here is approximate because n is changing but we assume it to be fixed on its mean
-mu <- bb.mean(alpha, beta, n.mu) / n.mu
-sig <- sqrt(bb.var(alpha, beta, n.mu)) / n.mu
+mu <- bb.mean(alpha_ic, beta_ic, N.mu) / N.mu
+sig <- sqrt(bb.var(alpha_ic, beta_ic, N.mu)) / N.mu
 charts$x <- x_chart(mu = mu,
                     sig = sig)
 
 #Laney chart
-params <- bb_mm('laney', alpha, beta, n.mu)
+params <- bb_mm('laney', alpha_ic, beta_ic, N.mu)
 charts$laney <- laney_chart(params$rho, params$sig_p, params$sig_z)
 
 # P chart
-charts$p <- p_chart(alpha / (alpha + beta))
+charts$p <- p_chart(alpha_ic / (alpha_ic + beta_ic))
 
 # Calibrate the charts to have the desired in control ARL
 target_arl <- 100
-charts <- lapply(charts, function(chart) cal_arl(chart, target_arl, n.mu, alpha, beta))
+charts <- lapply(charts, function(chart) cal_arl(chart, target_arl, N.mu, alpha_ic, beta_ic))
 
 # Prepare Storage
 run.lens <- matrix(NA, nrow = iters, ncol = length(charts))
+
+# When are we going to shift? For now, always at time point 50
+##TODO: Shift the mean at a random point
+change_point <- 50
 
 # Do the actual simulation
 pb <- progress_bar$new(total = iters)
 for (iter in 1:iters) {
     i <- 0
     pb$tick()
-    while (i < max_periods) {
+    while (i < ) {
         i <- i + 1
         #Generate a sample
-        n <- rpois(1, n.mu)
-        rho <- rbeta(1, alpha, beta)
+        n <- rpois(1, N.mu)
+
+        if (i <= change_point) {
+            rho <- rbeta(1, alpha_ic, beta_ic)
+        } else {
+            rho <- rbeta(1, alpha_oc, beta_oc)
+        }
         x <- rbinom(1, n, rho)
 
         #Check each chart to see if it has signaled
