@@ -2,6 +2,7 @@
 #  test_betabin_funcs.R Author "Nathan Wycoff <nathanbrwycoff@gmail.com>" Date 01.23.2018
 
 ## This script puts some beta-binomial functions to the test
+require(bbmle)
 source('./charts/re_beta_chart.R')
 source('./lib.R')
 
@@ -39,3 +40,18 @@ mu <- bb.mean(alpha, beta, N)
 sig <- sqrt(bb.var(alpha, beta, N))
 
 bb_mm('betabinom', mu = mu, sig = sig, N = N)
+
+## See if we can estimate alpha and beta given some data.
+alpha <- 10
+beta <- 2
+N <- 100
+m <- 3
+rho <- rbeta(m, alpha, beta)
+X <- rbinom(m, N, rho)
+chart <- re_beta_chart()
+
+# Using robust method of moments
+est_params(chart, X, N)
+
+# Using maximum likelihood
+est_params(chart, X, N, type = 'mle')

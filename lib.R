@@ -34,7 +34,7 @@ cal_arl <- function(chart, target_arl, n, alpha, beta) UseMethod('cal_arl')
 #' Estimate Control-Chart Parameters.
 #'
 #' Estimate the parameters for a control chart given data.
-est_params <- function(chart, X, N) UseMethod('est_params')
+est_params <- function(chart, X, N, ...) UseMethod('est_params')
 
 #' Moment Matching for Various Distributions
 #'
@@ -56,8 +56,8 @@ bb_mm <- function(target, alpha = NULL, beta = NULL, N = NULL, mu = NULL,
                                                (sig^2*N - mu * (N - mu)))
         beta <- alpha * (N - mu) / mu
 
-        if (alpha <= 0 || beta <= 0) {
-            warning("alpha or beta is less than or equal to zero (desired mean/variance combination not possible at this sample size)")
+        if (alpha < 0 || beta < 0) {
+            warning("alpha or beta is less than zero (desired mean/variance combination not possible at this sample size)")
         }
 
         return(list(alpha = alpha, beta = beta))
@@ -72,7 +72,7 @@ bb_mm <- function(target, alpha = NULL, beta = NULL, N = NULL, mu = NULL,
 plot.control_chart <- function(chart, X, N, force_01 = FALSE) {
     m <- length(X)
     if ((length(X) != length(N)) && length(N) != 1) {
-        stop("'N' should either be a scalar, indicating constant sample size, or a vector of the same length as 'X'")
+        stop("'N' should either be a scalar, indicating constant sample size, or a vector of the same length of 'X'")
     }
     
     #Get the chart's limits for all the data

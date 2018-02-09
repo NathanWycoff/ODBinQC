@@ -7,14 +7,48 @@
 require('hypergeo')
 
 #PMF functions
-bb.pmf <- function(k,n,a,b) {
+bb.pmf <- function(k,n,a,b, lspace = FALSE) {
     l <- lchoose(n,k) + lbeta(k + a, n - k + b) - lbeta(a, b)
-    exp(l)
+    if (lspace) {
+        return(l)
+    } else {
+        return(exp(l))
+    }
 }
 
 # cdf func
 bb.cdf <- function(k, n, a, b) {
     sum(sapply(0:k, function(i) bb.pmf(i, n, a, b)))
+}
+
+#' Maximum Likelihood Estimation for the Beta-Binomial Distribution.
+#'
+#' Numerically optimize the likelihood of the beta-binomial distribution given some observations. The inital guess is determined via method of moments.
+#' @param X An integer vector, the observed counts
+#' @param N Either an integer vector of length length(X), or a scalar, indicating the sample size for all trials or for each trial, repectively.
+bb.mle <- function(X, N) {
+    #Check inputs
+    m <- length(X)
+    if (length(N) == 1) {
+        N <- rep(N, m)
+    }
+    if (length(N) != m) {
+        stop("'N' should either be a scalar, indicating constant sample size, or a vector of the same length of 'X'")
+    }
+
+    # Compose our cost function, the negative log likelihood
+    nllik <- function(params) -sum(sapply(1:m, function(i) 
+                          bb.pmf(X[i], N[i], params[1], params[2], lspace = TRUE)))
+
+    # Initialize using method of moments estimators.
+    mu <- mean(X)
+    sig <- sd(X)
+    init <- bb_mm('betabinom', mu = mu, sig = sig, N = mean(N))
+    init <- pmax(1e-3, init)#If method of moments fails, just put in something near 0
+
+    # Do the optim
+    ret <- optim(init, nllik)$par
+    return(list(alpha = ret[1], beta = ret[2]))
 }
 
 #' Calculate Beta-Binomial Quantiles.
@@ -44,21 +78,13 @@ bb.quantile <- function(p, n, a, b) {
 #' @param l_p A scalar indicating the lower quantile at which to signal. May be set to match a specified ARL using cal_arl.
 #' @param u_p A scalar indicating the upper quantile at which to signal. May be set to match a specified ARL using cal_arl.
 #' @return An object of class control.chart representing the chart.
-re_beta_chart <- function(X = NULL, N = NULL, alpha, beta, l_p = 0.025, u_p = 0.975) {
+re_beta_chart <- function(alpha = NA, beta = NA, l_p = 0.025, u_p = 0.975) {
     ## Check inputs
-    if (missing(alpha) || missing(beta)) {
-        stop("Estimation not yet implemented")
-    }
-    if (length(X) != length(N)) {
-        stop("X and N represent the observed successes and sample sizes respectively, and should be of the smame length.")
-    }
 
     #Create the object.
     ret <- list()
     ret$alpha <- alpha
     ret$beta <- beta
-    ret$X <- X
-    ret$N <- N
     ret$l_p = l_p
     ret$u_p = u_p
     class(ret) <- c('re_beta_chart', 'control_chart')
@@ -75,6 +101,38 @@ get_lims.re_beta_chart <- function(chart, n) {
     l_lim <- bb.quantile(chart$l_p, n, chart$alpha, chart$beta) / n
     u_lim <- bb.quantile(chart$u_p, n, chart$alpha, chart$beta) / n
     return(c(l_lim, u_lim))
+}
+
+
+#' Estimate Beta-Binomial Chart parameters
+#'
+#' Estimate the parameters for a control chart given data.
+#' @param chart The chart object which estimation is to be performed for.
+#' @param X A integer vector of observed counts.
+#' @param N Either an integer vector of the same length as X, indicating sample sizes, or a scalar integer for constant sample size.
+#' @param type A string specifying the kind of inference, 'mle' for maximum likelihood and 'rmm' for robust moment matching (see <paper name> for details)
+#' @return The chart with parameters modified. 
+est_params.re_beta_chart <- function(chart, X, N, type = 'rmm') {
+    if ((length(X) != length(N)) && length(N) != 1) {
+        stop("'N' should either be a scalar, indicating constant sample size, or a vector of the same length of 'X'")
+    }
+
+    if (type == 'rmm') {
+        mu <- mean(X)
+        sig <- mean(abs(diff(X))) / 1.128
+
+        ret <- bb_mm('betabinom', N = N, mu = mu, sig = sig)
+        chart$alpha <- ret$alpha
+        chart$beta <- ret$beta
+    } else if (type == 'mle') {
+        ests <- bb.mle(X, N)
+        chart$alpha <- ests$alpha
+        chart$beta <- ests$beta
+    } else {
+        stop("Inference type not implemented, choose either 'rmm' or 'mle'")
+    }
+
+    return(chart)
 }
 
 #' Calibrate Beta RE Chart In Control ARL
