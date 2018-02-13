@@ -53,7 +53,7 @@ bb_mm <- function(target, alpha = NULL, beta = NULL, N = NULL, mu = NULL,
     } else if (target == 'betabinom') {
 
         alpha <- N * (mu* (N - mu) - sig^2) / ((1 + (N-mu) / mu) * 
-                                               (sig^2*N - mu * (N - mu)))
+                                               (N*sig^2 - mu * (N - mu)))
         beta <- alpha * (N - mu) / mu
 
         if (alpha < 0 || beta < 0) {

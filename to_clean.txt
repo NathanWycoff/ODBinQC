@@ -1,0 +1,2 @@
+dots to underscores
+bb_mm should probably just be two funcs

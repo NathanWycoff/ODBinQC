@@ -45,7 +45,7 @@ bb_mm('betabinom', mu = mu, sig = sig, N = N)
 alpha <- 10
 beta <- 2
 N <- 100
-m <- 3
+m <- 300
 rho <- rbeta(m, alpha, beta)
 X <- rbinom(m, N, rho)
 chart <- re_beta_chart()

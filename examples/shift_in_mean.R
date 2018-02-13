@@ -10,7 +10,7 @@ require(progress)
 
 ## Randomly shift the mean and observe each method's performance.
 
-#K <- 100#How many time points are observed
+K <- 20#When does the shift occur?
 N.mu <- 1e3#How many points do we observe on average at each time point
 
 #Specify a certain mean and variance...
@@ -19,10 +19,10 @@ rho_oc <- 0.2
 sig <- N.mu*0.2
 
 # and get the appropriate alpha and beta
-res_ic <- bb_mm('betabinom', N = N.mu, mu = N.mu * rho_ic, sig = sig)
+res_ic <- bb_mm('betabinom', N = N.mu, mu = N.mu*rho_ic, sig = sig)
 alpha_ic <- res_ic$alpha
 beta_ic <- res_ic$beta
-res_oc <- bb_mm('betabinom', N = N.mu, mu = N.mu * rho_oc, sig = sig)
+res_oc <- bb_mm('betabinom', N = N.mu, mu = N.mu*rho_oc, sig = sig)
 alpha_oc <- res_oc$alpha
 beta_oc <- res_oc$beta
 
@@ -32,44 +32,39 @@ iters <- 1e3#How many times do we run the experiment?
 charts <- list()
 
 #Beta Random Effects
-charts$beta.re <- re_beta_chart(alpha = alpha_ic, beta = beta_ic)
+charts$beta.re <- re_beta_chart(alpha = alpha, beta = beta)
 
 # X chart
 #TODO: The sd evaluation here is approximate because n is changing but we assume it to be fixed on its mean
-mu <- bb.mean(alpha_ic, beta_ic, N.mu) / N.mu
-sig <- sqrt(bb.var(alpha_ic, beta_ic, N.mu)) / N.mu
+mu <- bb.mean(alpha, beta, N.mu) / N.mu
+sig <- sqrt(bb.var(alpha, beta, N.mu)) / N.mu
 charts$x <- x_chart(mu = mu,
                     sig = sig)
 
 #Laney chart
-params <- bb_mm('laney', alpha_ic, beta_ic, N.mu)
+params <- bb_mm('laney', alpha, beta, N.mu)
 charts$laney <- laney_chart(params$rho, params$sig_p, params$sig_z)
 
 # P chart
-charts$p <- p_chart(alpha_ic / (alpha_ic + beta_ic))
+charts$p <- p_chart(alpha / (alpha + beta))
 
 # Calibrate the charts to have the desired in control ARL
 target_arl <- 100
-charts <- lapply(charts, function(chart) cal_arl(chart, target_arl, N.mu, alpha_ic, beta_ic))
+charts <- lapply(charts, function(chart) cal_arl(chart, target_arl, N.mu, alpha, beta))
 
 # Prepare Storage
 run.lens <- matrix(NA, nrow = iters, ncol = length(charts))
-
-# When are we going to shift? For now, always at time point 50
-##TODO: Shift the mean at a random point
-change_point <- 50
 
 # Do the actual simulation
 pb <- progress_bar$new(total = iters)
 for (iter in 1:iters) {
     i <- 0
     pb$tick()
-    while (i < ) {
+    while (TRUE) {
         i <- i + 1
         #Generate a sample
         n <- rpois(1, N.mu)
-
-        if (i <= change_point) {
+        if (i < K) {
             rho <- rbeta(1, alpha_ic, beta_ic)
         } else {
             rho <- rbeta(1, alpha_oc, beta_oc)
@@ -80,7 +75,7 @@ for (iter in 1:iters) {
         lims <- lapply(charts, function(chart) get_lims(chart, n))
 
         #Make sure all of our limits are attainable
-        if (sum(sapply(lims, function(lim) lim[1] == 0 || lim[2] == 1)) > 0) {
+        if (sum(sapply(lims, function(lim) lim[1] == 0 && lim[2] == 1)) > 0) {
             stop("A limit is either 0 or 1")
         }
 
