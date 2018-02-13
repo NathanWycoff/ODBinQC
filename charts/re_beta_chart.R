@@ -61,7 +61,7 @@ bb.mle <- function(X, N) {
 #' @return The corresponding quantile, an integer in {0, ..., n}
 bb.quantile <- function(p, n, a, b) {
     #cum_dists <- sapply(0:n, function(i) bb.cdf(i, n, alpha, beta))
-    cum_dists <- cumsum(sapply(0:n, function(i) bb.pmf(i, n, alpha, beta)))
+    cum_dists <- cumsum(sapply(0:n, function(i) bb.pmf(i, n, a, b)))
     ret <- sapply(p, function(i) sum(cum_dists < i, na.rm = TRUE))
     return(ret)
 }
@@ -77,8 +77,9 @@ bb.quantile <- function(p, n, a, b) {
 #' @param beta A positive scalar shape parameter.
 #' @param l_p A scalar indicating the lower quantile at which to signal. May be set to match a specified ARL using cal_arl.
 #' @param u_p A scalar indicating the upper quantile at which to signal. May be set to match a specified ARL using cal_arl.
+#' @param def_inf A string, one of {'mle', 'rmm'} specifying the default inference method. 'mle' is Maximum Likelihood, 'rmm' is Robust Method of Moments.
 #' @return An object of class control.chart representing the chart.
-re_beta_chart <- function(alpha = NA, beta = NA, l_p = 0.025, u_p = 0.975) {
+re_beta_chart <- function(alpha = NA, beta = NA, l_p = 0.025, u_p = 0.975, def_inf = 'rmm') {
     ## Check inputs
 
     #Create the object.
@@ -87,6 +88,7 @@ re_beta_chart <- function(alpha = NA, beta = NA, l_p = 0.025, u_p = 0.975) {
     ret$beta <- beta
     ret$l_p = l_p
     ret$u_p = u_p
+    ret$def_inf <- def_inf
     class(ret) <- c('re_beta_chart', 'control_chart')
     return(ret)
 }
@@ -110,11 +112,15 @@ get_lims.re_beta_chart <- function(chart, n) {
 #' @param chart The chart object which estimation is to be performed for.
 #' @param X A integer vector of observed counts.
 #' @param N Either an integer vector of the same length as X, indicating sample sizes, or a scalar integer for constant sample size.
-#' @param type A string specifying the kind of inference, 'mle' for maximum likelihood and 'rmm' for robust moment matching (see <paper name> for details)
+#' @param type A string specifying the kind of inference, 'mle' for maximum likelihood and 'rmm' for robust moment matching (see <paper name> for details). Defaults to the chart's default.
 #' @return The chart with parameters modified. 
-est_params.re_beta_chart <- function(chart, X, N, type = 'rmm') {
+est_params.re_beta_chart <- function(chart, X, N, type) {
     if ((length(X) != length(N)) && length(N) != 1) {
         stop("'N' should either be a scalar, indicating constant sample size, or a vector of the same length of 'X'")
+    }
+
+    if (missing(type)) {
+        type <- chart$def_inf
     }
 
     if (type == 'rmm') {

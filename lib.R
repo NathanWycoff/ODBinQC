@@ -69,7 +69,7 @@ bb_mm <- function(target, alpha = NULL, beta = NULL, N = NULL, mu = NULL,
 #' Plot a Control Chart Given Data
 #'
 #' Plot a control chart and its limits given data
-plot.control_chart <- function(chart, X, N, force_01 = FALSE) {
+plot.control_chart <- function(chart, X, N, force_01 = TRUE) {
     m <- length(X)
     if ((length(X) != length(N)) && length(N) != 1) {
         stop("'N' should either be a scalar, indicating constant sample size, or a vector of the same length of 'X'")

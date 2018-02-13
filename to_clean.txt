@@ -1,2 +1,4 @@
 dots to underscores
 bb_mm should probably just be two funcs
+check for positivity of alpha and beta in more places
+pretty print for charts
