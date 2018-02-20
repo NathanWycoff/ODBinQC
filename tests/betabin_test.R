@@ -55,3 +55,35 @@ est_params(chart, X, N)
 
 # Using maximum likelihood
 est_params(chart, X, N, type = 'mle')
+
+## Why can we get good values for alpha and beta with sd's on proportions that don't make any sense
+
+#Specify a mean and variance
+rho <- 0.1
+N <- 1e2
+sig_rho_naive <- sqrt(rho * (1 - rho) / N)
+
+mu_x <- N * rho
+sig_x <- N * sig_rho_naive
+
+k <- 1
+sig_x <- k * sqrt(N) * sqrt(rho*(1-rho))
+
+sig_x <- sqrt(N) * sqrt(0.6)
+
+
+###
+#Get the alpha and beta
+res <- bb_mm('betabinom', N = N, mu = mu_x, sig = sig_x)
+print(res)
+
+#Sample from it
+m <- 3e4
+rho <- rbeta(m, res$alpha, res$beta)
+X <- rbinom(m, N, rho)
+
+#Find out what's happenin
+mean(X)
+sd(X)
+mean(X / N)
+sd(X / N)

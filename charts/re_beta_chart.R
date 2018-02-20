@@ -127,7 +127,7 @@ est_params.re_beta_chart <- function(chart, X, N, type) {
         mu <- mean(X)
         sig <- mean(abs(diff(X))) / 1.128
 
-        ret <- bb_mm('betabinom', N = N, mu = mu, sig = sig)
+        ret <- bb_mm('betabinom', N = mean(N), mu = mu, sig = sig)
         chart$alpha <- ret$alpha
         chart$beta <- ret$beta
     } else if (type == 'mle') {
