@@ -35,6 +35,7 @@ for (sig in sigs) {
     colnames(ARL_profile) <- c("BetaBinom.MLE", "BetaBinom.RMM", "X.Chart", 
                                "Laney.Chart", "P.Chart")
     rownames(ARL_profile) <- rho_ic + deltas
+
     for (d in 1:length(deltas)) {
         ## Determine out of sample parameters
         delta <- deltas[d]
@@ -146,5 +147,5 @@ for (sig in sigs) {
     }
 
     #Save the output to file.
-    capture.output(print(ARL_profile), file = paste('./output/type_1_arlprofile_sig_', sig / N.mu, '.tex', sep = '')
+    capture.output(print(ARL_profile), file = paste('./output/type_1_arlprofile_sig_', sig / N.mu, '.tex', sep = ''))
 }

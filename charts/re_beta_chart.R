@@ -4,7 +4,7 @@
 ## A chart to model binomial data with inherent batch-to-batch variation using the 
 ## beta-binomial model.
 
-require('hypergeo')
+library(hypergeo)
 
 #PMF functions
 bb.pmf <- function(k,n,a,b, lspace = FALSE) {
@@ -43,8 +43,10 @@ bb.mle <- function(X, N) {
     # Initialize using method of moments estimators.
     mu <- mean(X)
     sig <- sd(X)
-    init <- bb_mm('betabinom', mu = mu, sig = sig, N = mean(N))
-    init <- pmax(1e-3, init)#If method of moments fails, just put in something near 0
+    init <- unlist(bb_mm('betabinom', mu = mu, sig = sig, N = mean(N)))
+    if (min(init) < 1e-3) {
+        init <- pmax(1e-3, init)
+    }
 
     # Do the optim
     ret <- optim(init, nllik)$par

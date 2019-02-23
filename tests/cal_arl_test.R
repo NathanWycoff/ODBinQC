@@ -4,11 +4,11 @@
 ## Test functions that calibrate in control ARL.
 
 source('lib.R')
-source('./charts/re_beta_chart.R')
-source('./charts/x_chart.R')
-source('./charts/laney_chart.R')
-source('./charts/p_chart.R')
-require(progress)
+source('charts/re_beta_chart.R')
+source('charts/x_chart.R')
+source('charts/laney_chart.R')
+source('charts/p_chart.R')
+library(progress)
 
 ### Generate data from a beta-binomial model
 n.mu <- 1000#Mean number of observations per sample (Drawn form a poisson dist)
