@@ -2,7 +2,7 @@
 #  test_betabin_funcs.R Author "Nathan Wycoff <nathanbrwycoff@gmail.com>" Date 01.23.2018
 
 ## This script puts some beta-binomial functions to the test
-require(bbmle)
+library(bbmle)
 source('./charts/re_beta_chart.R')
 source('./lib.R')
 

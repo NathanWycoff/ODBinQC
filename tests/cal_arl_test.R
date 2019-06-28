@@ -12,10 +12,12 @@ library(progress)
 
 ### Generate data from a beta-binomial model
 n.mu <- 1000#Mean number of observations per sample (Drawn form a poisson dist)
-alpha <- 10#Parameters for random effect distribution (a beta dist)
-beta <- 10
-max_periods <- 100#After how many periods do we stop the simulation if the method still hasn't signaled?
+alpha <- 10000#Parameters for random effect distribution (a beta dist)
+beta <- 10000
+max_periods <- 10000#After how many periods do we stop the simulation if the method still hasn't signaled?
 iters <- 1e3#How many times do we run the experiment?
+set.seed(123)
+seeds <- sample(1e6,iters)
 
 ##Prepare the charts
 charts <- list()
@@ -47,6 +49,7 @@ run.lens <- matrix(NA, nrow = iters, ncol = length(charts))
 # Do the actual simulation
 pb <- progress_bar$new(total = iters)
 for (iter in 1:iters) {
+    set.seed(seeds[iter])
     i <- 0
     pb$tick()
     while (i < max_periods) {
@@ -82,4 +85,6 @@ for (iter in 1:iters) {
 }
 
 ## These should all be near target_arl
-colMeans(run.lens)
+se <- apply(run.lens, 2, sd) / sqrt(iters)
+cat("CI (lower) on means:", colMeans(run.lens) - se, "\n")
+cat("CI (upper) on means:", colMeans(run.lens) + se, "\n")

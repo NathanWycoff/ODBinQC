@@ -103,3 +103,67 @@ plot.control_chart <- function(chart, X, N, force_01 = TRUE) {
     points(1:m, l_lims, type = 'l', col = 'red')
     points(1:m, u_lims, type = 'l', col = 'red')
 }
+
+#PMF functions
+bb.pmf <- function(k,n,a,b, lspace = FALSE) {
+    l <- lchoose(n,k) + lbeta(k + a, n - k + b) - lbeta(a, b)
+    if (lspace) {
+        return(l)
+    } else {
+        return(exp(l))
+    }
+}
+
+# cdf func
+#TODO: Closed form cdf is possible with use of special functions
+bb.cdf <- function(k, n, a, b) {
+    sum(sapply(0:k, function(i) bb.pmf(i, n, a, b)))
+}
+
+#' Maximum Likelihood Estimation for the Beta-Binomial Distribution.
+#'
+#' Numerically optimize the likelihood of the beta-binomial distribution given some observations. The inital guess is determined via method of moments.
+#' @param X An integer vector, the observed counts
+#' @param N Either an integer vector of length length(X), or a scalar, indicating the sample size for all trials or for each trial, repectively.
+bb.mle <- function(X, N) {
+    #Check inputs
+    m <- length(X)
+    if (length(N) == 1) {
+        N <- rep(N, m)
+    }
+    if (length(N) != m) {
+        stop("'N' should either be a scalar, indicating constant sample size, or a vector of the same length of 'X'")
+    }
+
+    # Compose our cost function, the negative log likelihood
+    nllik <- function(params) -sum(sapply(1:m, function(i) 
+                          bb.pmf(X[i], N[i], params[1], params[2], lspace = TRUE)))
+
+    # Initialize using method of moments estimators.
+    mu <- mean(X)
+    sig <- sd(X)
+    init <- unlist(bb_mm('betabinom', mu = mu, sig = sig, N = mean(N)))
+    if (min(init) < 1e-3) {
+        init <- pmax(1e-3, init)
+    }
+
+    # Do the optim
+    ret <- optim(init, nllik)$par
+    return(list(alpha = ret[1], beta = ret[2]))
+}
+
+#' Calculate Beta-Binomial Quantiles.
+#'
+#' Calculate quantiles of the Beta-Binomial distribution in a numerically stable manner.
+#' @param p The desired probability level, a scalar in [0,1]
+#' @param n The sample size
+#' @param a The first positive shape parameter, also referred to as 'alpha'
+#' @param b The second positive shape parameter, also referred to as 'beta'
+#' @return The corresponding quantile, an integer in {0, ..., n}
+bb.quantile <- function(p, n, a, b) {
+    #cum_dists <- sapply(0:n, function(i) bb.cdf(i, n, alpha, beta))
+    cum_dists <- cumsum(sapply(0:n, function(i) bb.pmf(i, n, a, b)))
+    ret <- sapply(p, function(i) sum(cum_dists < i, na.rm = TRUE))
+    return(ret)
+}
+

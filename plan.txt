@@ -5,3 +5,4 @@ We're going to make comparisions based on ARL profile.
 In order for the comparisons to be fair, the methods must have comparable in-control ARL. This can be achieved by tuning parameters for each method. I think im goping to target an ARL of 100.
 
 That there is no single way to define "out-of-controlness" in this situation is a difficulty. I suggest fixing 3 variance levels, "low", "medium", "high", and then calculating ARL for many mean shifts within each. Hopefully, alpha and beta may be uniquely determined from a given variance and mean.
+

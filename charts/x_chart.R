@@ -82,6 +82,18 @@ cal_arl.x_chart <- function(chart, target_arl, n, alpha, beta) {
             (1-bb.cdf(ceiling(lims[2]), n, alpha, beta))
         return((p - target_p)^2)
     }
-    chart$k <- optimize(cost, c(0, 10))$minimum
+    #TODO: The upper limit in the next line should be determined as the value such that the upper limit will be 1 if we choose that as k
+    chart$k <- optimize(cost, c(0, 100))$minimum
+
+    # Check for limits on the boundary
+    lims <- get_lims(chart)
+    if (lims[1] == 0 && lims[2] != 1) {
+        warning("X chart lower limit at 0")
+    } else if (lims[1] != 0 && lims[2] == 1) {
+        warning("X chart lower limit at 1")
+    } else if (lims[1] == 0 && lims[2] == 1) {
+        warning("X chart has control limits at [0, 1] and will never signal.")
+    }
+
     return(chart)
 }

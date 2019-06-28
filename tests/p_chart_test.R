@@ -6,6 +6,7 @@ source('./charts/p_chart.R')
 source('lib.R')
 
 ## Test that we can recover rho, the probability of success, even under random effects
+set.seed(123)
 n <- 10000
 N.mu <- 100
 N <- rpois(n,N.mu-1)+1
@@ -20,3 +21,4 @@ chart <- est_params(chart, X, N)
 
 print(chart$rho)
 print(true_rho_exp)
+abs(chart$rho - true_rho_exp) < 1e-2
